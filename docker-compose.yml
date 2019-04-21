@@ -1,0 +1,23 @@
+version: '3'
+services:
+  client:
+    build:
+      context: ./client
+    command: --concurrent-clients=50 --report-interval=5 --web-service="http://web-service:8080"
+  web-service:
+    build:
+      context: ./web-service
+    command: --brokers="kafka-1:19092" --brokers="kafka-2:29092" --brokers="kafka-3:39092" --port=8080
+    ports:
+      - "8080:8080"
+  data-collector:
+    build:
+      context: ./data-collector
+    command: --brokers="kafka-1:19092" --brokers="kafka-2:29092"
+             --brokers="kafka-3:39092" --record-directory="/opt/report"
+             --groups activityGroup:activity --groups visitGroup:visit
+
+networks:
+  default:
+    external:
+      name: workshop-net
