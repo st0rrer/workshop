@@ -14,7 +14,7 @@ import (
 
 type activity struct {
 	topic    string
-	producer *mq.Producer
+	producer mq.Producer
 }
 
 func newActivity(topic string) (*activity, error) {

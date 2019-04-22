@@ -14,7 +14,7 @@ import (
 
 type visit struct {
 	topic    string
-	producer *mq.Producer
+	producer mq.Producer
 }
 
 func newVisit(topic string) (*visit, error) {

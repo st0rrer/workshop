@@ -11,7 +11,14 @@ import (
 	"time"
 )
 
-type Consumer struct {
+type Consumer interface {
+	BufReadMessages(ctx context.Context, buf int, timeout time.Duration) <-chan []kafka.Message
+	ReadMessage(ctx context.Context) <-chan kafka.Message
+	Commit(ctx context.Context, messages []kafka.Message)
+	Close()
+}
+
+type KafkaConsumer struct {
 	reader      *kafka.Reader
 	readOnce    sync.Once
 	bufReadOnce sync.Once
@@ -19,7 +26,7 @@ type Consumer struct {
 	bufMessages <-chan []kafka.Message
 }
 
-func NewConsumer(brokers []string, topic string, groupID string) (consumer *Consumer, err error) {
+func NewConsumer(brokers []string, topic string, groupID string) (consumer Consumer, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -33,13 +40,13 @@ func NewConsumer(brokers []string, topic string, groupID string) (consumer *Cons
 		GroupID: groupID,
 	}
 
-	consumer = &Consumer{
+	consumer = &KafkaConsumer{
 		reader: kafka.NewReader(cfg),
 	}
 	return
 }
 
-func (c *Consumer) BufReadMessages(ctx context.Context, buf int, timeout time.Duration) <-chan []kafka.Message {
+func (c *KafkaConsumer) BufReadMessages(ctx context.Context, buf int, timeout time.Duration) <-chan []kafka.Message {
 
 	c.bufReadOnce.Do(func() {
 		c.bufMessages = c.bufReadMessages(ctx, buf, timeout)
@@ -48,7 +55,7 @@ func (c *Consumer) BufReadMessages(ctx context.Context, buf int, timeout time.Du
 	return c.bufMessages
 }
 
-func (c *Consumer) bufReadMessages(ctx context.Context, buf int, timeout time.Duration) <-chan []kafka.Message {
+func (c *KafkaConsumer) bufReadMessages(ctx context.Context, buf int, timeout time.Duration) <-chan []kafka.Message {
 	messages := make(chan []kafka.Message)
 	go func() {
 
@@ -96,7 +103,7 @@ func (c *Consumer) bufReadMessages(ctx context.Context, buf int, timeout time.Du
 	return messages
 }
 
-func (c *Consumer) ReadMessage(ctx context.Context) <-chan kafka.Message {
+func (c *KafkaConsumer) ReadMessage(ctx context.Context) <-chan kafka.Message {
 
 	c.readOnce.Do(func() {
 		c.message = c.readMessage(ctx)
@@ -106,7 +113,7 @@ func (c *Consumer) ReadMessage(ctx context.Context) <-chan kafka.Message {
 
 }
 
-func (c *Consumer) readMessage(ctx context.Context) <-chan kafka.Message {
+func (c *KafkaConsumer) readMessage(ctx context.Context) <-chan kafka.Message {
 	logger := log.New(os.Stderr, "consumer#readMessage ", log.LstdFlags)
 
 	messages := make(chan kafka.Message)
@@ -137,7 +144,7 @@ func (c *Consumer) readMessage(ctx context.Context) <-chan kafka.Message {
 	return messages
 }
 
-func (c *Consumer) Commit(ctx context.Context, messages []kafka.Message) {
+func (c *KafkaConsumer) Commit(ctx context.Context, messages []kafka.Message) {
 	logger := log.New(os.Stderr, "consumer#Commit ", log.LstdFlags)
 	err := c.reader.CommitMessages(ctx, messages...)
 	if err != nil {
@@ -145,7 +152,7 @@ func (c *Consumer) Commit(ctx context.Context, messages []kafka.Message) {
 	}
 }
 
-func (c *Consumer) Close() {
+func (c *KafkaConsumer) Close() {
 	logger := log.New(os.Stderr, "consumer#Close ", log.LstdFlags)
 	err := c.reader.Close()
 	if err != nil {

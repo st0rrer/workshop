@@ -13,28 +13,26 @@ import (
 )
 
 type Report struct {
-	GroupID    string
-	Topic      string
-	writeError chan error
-	once       sync.Once
-	wg         sync.WaitGroup
-	ctx        context.Context
-	consumer   *mq.Consumer
+	GroupID  string
+	Topic    string
+	once     sync.Once
+	wg       sync.WaitGroup
+	ctx      context.Context
+	consumer mq.Consumer
 }
 
 func NewReport(groupID string, topic string, ctx context.Context) (*Report, error) {
 
-	messageQueue, err := mq.NewConsumer(config.GetConfig().Brokers, topic, groupID)
+	consumer, err := mq.NewConsumer(config.GetConfig().Brokers, topic, groupID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create new consumer: %v", err)
 	}
 
 	return &Report{
-		GroupID:    groupID,
-		Topic:      topic,
-		ctx:        ctx,
-		consumer:   messageQueue,
-		writeError: make(chan error, 100),
+		GroupID:  groupID,
+		Topic:    topic,
+		ctx:      ctx,
+		consumer: consumer,
 	}, nil
 }
 

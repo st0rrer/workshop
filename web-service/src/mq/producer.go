@@ -17,11 +17,15 @@ func init() {
 var numPartitions int
 var replicationFactor int
 
-type Producer struct {
+type Producer interface {
+	PushMessage(ctx context.Context, msg []kafka.Message) error
+}
+
+type KafkaProducer struct {
 	writer *kafka.Writer
 }
 
-func NewProducer(brokers []string, topic string) (producer *Producer, err error) {
+func NewProducer(brokers []string, topic string) (producer Producer, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -34,14 +38,14 @@ func NewProducer(brokers []string, topic string) (producer *Producer, err error)
 		Topic:   topic,
 	}
 
-	producer, err = &Producer{
+	producer, err = &KafkaProducer{
 		writer: kafka.NewWriter(cfg),
 	}, nil
 
 	return
 }
 
-func (p *Producer) PushMessage(ctx context.Context, msg []kafka.Message) error {
+func (p *KafkaProducer) PushMessage(ctx context.Context, msg []kafka.Message) error {
 	return p.writer.WriteMessages(ctx, msg...)
 }
 

@@ -30,8 +30,11 @@ func main() {
 
 	logger := log.New(os.Stderr, "main ", log.LstdFlags)
 
-	r := mux.NewRouter()
+	if len(config.GetConfig().Brokers) == 0 {
+		logger.Panic("Please specified brokers")
+	}
 
+	r := mux.NewRouter()
 	r.HandleFunc("/api/{report:(?:activity|visit)}/v1", handler.GetReportHandler()).
 		Methods("POST").
 		Headers("Content-Type", "application/json",

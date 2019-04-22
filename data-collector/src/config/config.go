@@ -12,7 +12,7 @@ func init() {
 
 	flag.Var(&conf.Groups, "groups", "kafka groups")
 	flag.Var(&conf.Brokers, "brokers", "kafka brokers")
-	flag.StringVar(&conf.RecordDirectory, "record-directory", "./log/", "path to save record")
+	flag.StringVar(&conf.RecordDirectory, "record-directory", "./log", "path to save record")
 	flag.IntVar(&conf.ConcurrentCount, "concurrent-count", 10, "count of goroutines for processing messages")
 
 	flag.Parse()

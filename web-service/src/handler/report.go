@@ -46,6 +46,11 @@ func reportHandler(res http.ResponseWriter, req *http.Request) {
 
 	logger.Println(req.RequestURI)
 
+	if req.Body == nil {
+		http.Error(res, "Bad Request", 400)
+		return
+	}
+
 	vars := mux.Vars(req)
 	reportKey := vars["report"]
 
