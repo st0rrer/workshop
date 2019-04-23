@@ -13,5 +13,7 @@ WORKDIR /opt
 
 COPY --from=builder /data-collector /data-collector
 
+RUN apk update && apk upgrade && apk add bash
+
 ENTRYPOINT ["/data-collector"]
 CMD ["/bin/bash"]

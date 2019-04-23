@@ -13,5 +13,7 @@ WORKDIR /opt
 
 COPY --from=builder /client /client
 
+RUN apk update && apk upgrade && apk add bash
+
 ENTRYPOINT ["/client"]
 CMD ["/bin/bash"]

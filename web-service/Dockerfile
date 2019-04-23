@@ -13,5 +13,7 @@ WORKDIR /opt
 
 COPY --from=builder /web-service /web-service
 
+RUN apk update && apk upgrade && apk add bash
+
 ENTRYPOINT ["/web-service"]
 CMD ["/bin/bash"]
